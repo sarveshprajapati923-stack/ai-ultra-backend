@@ -1,12 +1,16 @@
 const express = require("express");
 const cors = require("cors");
+const fetch = require("node-fetch");
 require("dotenv").config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ROUTE
+app.get("/", (req, res) => {
+  res.send("Server running 🚀");
+});
+
 app.post("/chat", async (req, res) => {
   try {
     const userMsg = req.body.message;
@@ -30,8 +34,10 @@ app.post("/chat", async (req, res) => {
     });
 
   } catch (err) {
+    console.log(err);
     res.json({ reply: "Error ❌" });
   }
 });
 
-app.listen(3000, () => console.log("Server running ✅"));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log("Server running on " + PORT));
