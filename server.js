@@ -4,7 +4,7 @@ require("dotenv").config();
 
 const app = express();
 
-// CORS fix (important)
+// CORS fix
 app.use(cors({
   origin: "*",
   methods: ["GET", "POST"],
@@ -15,17 +15,13 @@ app.use(express.json());
 
 // Test route
 app.get("/", (req, res) => {
-  res.send("Gemini Server running 🚀");
+  res.send("🚀 Gemini Server running");
 });
 
 // AI route
 app.post("/ask", async (req, res) => {
   try {
     const userMessage = req.body.message;
-
-    if (!userMessage) {
-      return res.status(400).json({ reply: "No message provided" });
-    }
 
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${process.env.GEMINI_API_KEY}`,
