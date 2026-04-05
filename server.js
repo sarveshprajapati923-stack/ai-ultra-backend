@@ -3,23 +3,32 @@ const cors = require("cors");
 require("dotenv").config();
 
 const app = express();
-app.use(cors());
+
+// CORS fix (important)
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST"],
+  allowedHeaders: ["Content-Type"]
+}));
+
 app.use(express.json());
 
-const PORT = process.env.PORT || 3000;
-
-// test route
+// Test route
 app.get("/", (req, res) => {
   res.send("Gemini Server running 🚀");
 });
 
-// chat route (Gemini API)
-app.post("/chat", async (req, res) => {
+// AI route
+app.post("/ask", async (req, res) => {
   try {
-    const userMsg = req.body.message;
+    const userMessage = req.body.message;
+
+    if (!userMessage) {
+      return res.status(400).json({ reply: "No message provided" });
+    }
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
         method: "POST",
         headers: {
@@ -28,7 +37,7 @@ app.post("/chat", async (req, res) => {
         body: JSON.stringify({
           contents: [
             {
-              parts: [{ text: userMsg }]
+              parts: [{ text: userMessage }]
             }
           ]
         })
@@ -39,16 +48,18 @@ app.post("/chat", async (req, res) => {
 
     const reply =
       data.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "No response";
+      "No response from AI";
 
     res.json({ reply });
 
-  } catch (err) {
-    console.log(err);
-    res.json({ reply: "Error ❌" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ reply: "Server error" });
   }
 });
 
+// Port
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log("Server running on port " + PORT);
+  console.log(`Server running on port ${PORT}`);
 });
