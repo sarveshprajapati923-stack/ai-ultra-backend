@@ -1,55 +1,38 @@
-const express = require("express");
-const cors = require("cors");
-const fetch = require("node-fetch");
+import express from "express";
+import cors from "cors";
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const API_KEY = "AIzaSyBKJEf_kVC2-eKvcwVJP2qrHheSLJkMLoM"; // 👈 apna API key
+const API_KEY = "AIzaSyBKJEf_kVC2-eKvcwVJP2qrHheSLJkMLoM"; // yaha apni key daalo
 
 app.post("/chat", async (req, res) => {
   const userMsg = req.body.message;
 
   try {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${API_KEY}`
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [
-          {
-            role: "system",
-            content: `
-You are Nexora AI 🤖
-- Answer in Hinglish
-- Short + clear + helpful
-- Use points if needed
-- Highlight main words with ** **
-- End with suggestion like: "Agar chaho to main aur simple tarike se bhi samjha du"
-`
-          },
-          { role: "user", content: userMsg }
-        ]
-      })
-    });
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: userMsg }] }]
+        })
+      }
+    );
 
     const data = await response.json();
 
-    res.json({
-      reply: data.choices[0].message.content
-    });
+    const reply =
+      data.candidates?.[0]?.content?.parts?.[0]?.text ||
+      "No response";
+
+    res.json({ reply });
 
   } catch (err) {
-    res.json({
-      reply: "Error aa gaya ⚠️"
-    });
+    res.json({ reply: "Error aaya 😢" });
   }
 });
 
-app.listen(3000, () => {
-  console.log("Server running 🚀");
-});
+app.listen(3000, () => console.log("Server running"));
