@@ -7,28 +7,18 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 10000;
 
-// ✅ Check server
 app.get("/", (req, res) => {
   res.send("Server running 🚀");
 });
 
-// ✅ Chat API
 app.post("/chat", async (req, res) => {
   try {
     const { message } = req.body;
 
-    if (!message) {
-      return res.json({ reply: "No message sent ❌" });
-    }
-
     const API_KEY = process.env.GEMINI_API_KEY;
 
-    if (!API_KEY) {
-      return res.json({ reply: "API key missing ❌" });
-    }
-
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`,
       {
         method: "POST",
         headers: {
@@ -45,23 +35,19 @@ app.post("/chat", async (req, res) => {
     );
 
     const data = await response.json();
-
-    // 🔍 Debug log
-    console.log("API RAW RESPONSE:", JSON.stringify(data));
+    console.log("API:", data);
 
     const reply =
       data?.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "No reply from AI ❌";
+      "No reply ❌";
 
     res.json({ reply });
 
   } catch (error) {
-    console.error("ERROR:", error);
-    res.json({ reply: "Server error ❌" });
+    res.json({ reply: "Error ❌" });
   }
 });
 
-// ✅ Start server
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on ${PORT}`);
 });
