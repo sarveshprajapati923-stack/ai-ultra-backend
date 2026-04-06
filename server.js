@@ -1,41 +1,55 @@
 const express = require("express");
 const cors = require("cors");
+const fetch = require("node-fetch");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Home route
-app.get("/", (req, res) => {
-  res.send("Server is running ✅");
-});
+const API_KEY = "AIzaSyBKJEf_kVC2-eKvcwVJP2qrHheSLJkMLoM"; // 👈 apna API key
 
-// Chat route
 app.post("/chat", async (req, res) => {
-  const userMsg = req.body.message.toLowerCase();
+  const userMsg = req.body.message;
 
-  let reply = "";
+  try {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: `
+You are Nexora AI 🤖
+- Answer in Hinglish
+- Short + clear + helpful
+- Use points if needed
+- Highlight main words with ** **
+- End with suggestion like: "Agar chaho to main aur simple tarike se bhi samjha du"
+`
+          },
+          { role: "user", content: userMsg }
+        ]
+      })
+    });
 
-  if (userMsg.includes("english")) {
-    reply = "English seekhne ke liye daily practice karo, videos dekho aur bolne ki habit banao 👍";
-  } 
-  else if (userMsg.includes("ai")) {
-    reply = "AI ka concept 1950s me start hua tha 🤖 aur aaj bahut advance ho chuka hai.";
-  } 
-  else if (userMsg.includes("money")) {
-    reply = "Online paise kamane ke liye skills sikho jaise coding, editing ya freelancing 💰";
-  } 
-  else {
-    reply = "Good question 👍 main abhi basic AI hu, aur improve ho raha hu.";
+    const data = await response.json();
+
+    res.json({
+      reply: data.choices[0].message.content
+    });
+
+  } catch (err) {
+    res.json({
+      reply: "Error aa gaya ⚠️"
+    });
   }
-
-  // delay (typing feel)
-  setTimeout(() => {
-    res.json({ reply });
-  }, 1500);
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log("Server running on port " + PORT);
+app.listen(3000, () => {
+  console.log("Server running 🚀");
 });
