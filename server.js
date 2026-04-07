@@ -7,6 +7,13 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 10000;
 
+// 🔑 Multiple keys (Render me add karo)
+const KEYS = [
+  process.env.KEY1,
+  process.env.KEY2,
+  process.env.KEY3
+].filter(Boolean);
+
 app.get("/", (req, res) => {
   res.send("Server running 🚀");
 });
@@ -15,45 +22,53 @@ app.post("/chat", async (req, res) => {
   try {
     const { message } = req.body;
 
-    const API_KEY = process.env.GEMINI_API_KEY;
-
-    if (!API_KEY) {
-      return res.json({ reply: "API KEY missing ❌" });
+    if (!message) {
+      return res.json({ reply: "No message ❌" });
     }
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${API_KEY}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [{ text: message }]
-            }
-          ]
-        })
+    if (KEYS.length === 0) {
+      return res.json({ reply: "No API keys ❌" });
+    }
+
+    // 🔁 Try all keys
+    for (let key of KEYS) {
+      try {
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro-latest:generateContent?key=${key}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              contents: [
+                {
+                  parts: [{ text: message }]
+                }
+              ]
+            })
+          }
+        );
+
+        const data = await response.json();
+
+        // ✅ success
+        if (!data.error) {
+          const reply =
+            data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+          if (reply) {
+            return res.json({ reply });
+          }
+        }
+
+      } catch (e) {
+        console.log("Key failed, trying next...");
       }
-    );
-
-    const data = await response.json();
-
-    console.log("FULL API RESPONSE:", data);
-
-    if (data.error) {
-      return res.json({ reply: "API Error: " + data.error.message });
     }
 
-    const reply =
-      data?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (!reply) {
-      return res.json({ reply: "Empty AI response ❌" });
-    }
-
-    res.json({ reply });
+    // ❌ all keys failed
+    res.json({ reply: "All API keys exhausted ❌" });
 
   } catch (error) {
     console.error(error);
