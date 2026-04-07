@@ -15,7 +15,7 @@ app.post("/chat", async (req, res) => {
   try {
     const { message } = req.body;
 
-    const API_KEY = process.env.GEMINI_API_KEY;AIzaSyCP1E2A1GTg3PAdDtzJoAzYLiiCFyKHGQs
+    const API_KEY = process.env.GEMINI_API_KEY;
 
     if (!API_KEY) {
       return res.json({ reply: "API KEY missing ❌" });
