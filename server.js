@@ -8,17 +8,19 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 10000;
 
-// 🔑 Multiple Keys
+// 🔑 API KEYS
 const KEYS = [
   process.env.KEY1,
   process.env.KEY2,
   process.env.KEY3
 ].filter(Boolean);
 
+// ✅ ROOT CHECK (IMPORTANT)
 app.get("/", (req, res) => {
-  res.send("Nexora Backend Running 🚀");
+  res.send("Server running 🚀");
 });
 
+// ✅ CHAT API
 app.post("/chat", async (req, res) => {
   try {
     const { message } = req.body;
@@ -34,7 +36,7 @@ app.post("/chat", async (req, res) => {
     for (let key of KEYS) {
       try {
         const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${key}`,
+          `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro-latest:generateContent?key=${key}`,
           {
             method: "POST",
             headers: {
@@ -52,7 +54,6 @@ app.post("/chat", async (req, res) => {
 
         const data = await response.json();
 
-        // ✅ Success
         if (!data.error) {
           const reply =
             data?.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -62,20 +63,19 @@ app.post("/chat", async (req, res) => {
           }
         }
 
-      } catch (e) {
-        console.log("Key failed → trying next");
+      } catch (err) {
+        console.log("Key failed, trying next...");
       }
     }
 
-    // ❌ All keys failed
     res.json({ reply: "All API keys exhausted ❌" });
 
   } catch (error) {
     console.error(error);
-    res.json({ reply: "Server crash ❌" });
+    res.json({ reply: "Server error ❌" });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`Server runninServer{PORT}`);
+  console.log(`Server running on ${PORT}`);
 });
